@@ -4,13 +4,12 @@ import System.Environment
 import System.Directory
 import System.IO
 import Data.List
-import System.Directory.Tree (FileName)
 
 key :: [(String, [String] -> IO ())]
 key = [("add", add)
       , ("remove", remove)
-      , ("cat", catFile)]
-
+      , ("cat", catFile')]
+      
 add :: [String] -> IO ()
 add [fileName, input] = appendFile fileName (input ++ "\n")
 
@@ -28,28 +27,36 @@ remove [fileName, numberString] = do
   removeFile fileName
   renameFile tempName fileName
 
-twoHandles :: Handle -> Handle -> IO String
-twoHandles firstH secondH = do
+twoHandles :: Handle -> Handle -> Handle -> IO ()
+twoHandles firstH secondH outH = do
   end <-hIsEOF firstH
   if end
-    then return $ "EOF"
+    then return ()
     else do fLine <- hGetLine firstH
             sLine <- hGetLine secondH
             let fusionLines = fLine ++ " " ++ sLine
-            return $ fusionLines
-            twoHandles firstH secondH
+            hPutStrLn outH fusionLines
+            twoHandles firstH secondH outH
+
+catFile' :: [String] -> IO ()
+catFile' [firstFile, secondFile, outFile] = do
+  firstHandle <- openFile firstFile ReadMode
+  secondHandle <- openFile secondFile ReadMode
+  outHandle <- openFile outFile WriteMode
+  twoHandles firstHandle secondHandle outHandle
+  hClose firstHandle
+  hClose secondHandle
+  hClose outHandle
             
-catFile :: FilePath -> FilePath -> FileName -> IO ()
+catFile :: FilePath -> FilePath -> FilePath -> IO ()
 catFile firstFile secondFile outFile = do
   firstHandle <- openFile firstFile ReadMode
   secondHandle <- openFile secondFile ReadMode
-  (tempName, tempHandle) <- openTempFile "." "temp"
-  fusionLines <- twoHandles firstHandle secondHandle
-  hPutStrLn tempHandle fusionLines
+  outHandle <- openFile outFile WriteMode
+  twoHandles firstHandle secondHandle outHandle
   hClose firstHandle
   hClose secondHandle
-  hClose tempHandle
-  renameFile tempName outFile
+  hClose outHandle
 
 main :: IO ()
 main = do
