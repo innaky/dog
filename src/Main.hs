@@ -8,7 +8,8 @@ import Data.List
 key :: [(String, [String] -> IO ())]
 key = [("add", add)
       , ("remove", remove)
-      , ("cat", fusFiles)]
+      , ("cat", fusFiles)
+      , ("num", numberLines)]
       
 add :: [String] -> IO ()
 add [fileName, input] = appendFile fileName (input ++ "\n")
@@ -47,6 +48,13 @@ fusFiles [firstFile, secondFile, outFile] = do
   hClose firstHandle
   hClose secondHandle
   hClose outHandle
+
+numberLines :: [String] -> IO ()
+numberLines [filename] = do
+  contents <- readFile filename
+  let allContent = lines contents
+      numberLine = zipWith (\n line -> show n ++ " " ++ line) [0..] allContent
+  putStr $ unlines numberLine
             
 main :: IO ()
 main = do
