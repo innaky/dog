@@ -8,7 +8,7 @@ import Data.List
 key :: [(String, [String] -> IO ())]
 key = [("add", add)
       , ("remove", remove)
-      , ("cat", catFile')]
+      , ("cat", fusFiles)]
       
 add :: [String] -> IO ()
 add [fileName, input] = appendFile fileName (input ++ "\n")
@@ -38,8 +38,8 @@ twoHandles firstH secondH outH = do
             hPutStrLn outH fusionLines
             twoHandles firstH secondH outH
 
-catFile' :: [String] -> IO ()
-catFile' [firstFile, secondFile, outFile] = do
+fusFiles :: [String] -> IO ()
+fusFiles [firstFile, secondFile, outFile] = do
   firstHandle <- openFile firstFile ReadMode
   secondHandle <- openFile secondFile ReadMode
   outHandle <- openFile outFile WriteMode
@@ -48,16 +48,6 @@ catFile' [firstFile, secondFile, outFile] = do
   hClose secondHandle
   hClose outHandle
             
-catFile :: FilePath -> FilePath -> FilePath -> IO ()
-catFile firstFile secondFile outFile = do
-  firstHandle <- openFile firstFile ReadMode
-  secondHandle <- openFile secondFile ReadMode
-  outHandle <- openFile outFile WriteMode
-  twoHandles firstHandle secondHandle outHandle
-  hClose firstHandle
-  hClose secondHandle
-  hClose outHandle
-
 main :: IO ()
 main = do
   (cmd:args) <- getArgs
